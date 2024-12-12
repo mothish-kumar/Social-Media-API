@@ -9,8 +9,8 @@ export const authJWT = (req, res, next) => {
         return res.status(401).json({ message: 'Access token missing' })
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = decoded
+        const verified = jwt.verify(token, process.env.JWT_SECRET)
+        req.user = verified
         next()
     } catch (error) {
         return res.status(403).json({ message: 'Invalid or expired token' })

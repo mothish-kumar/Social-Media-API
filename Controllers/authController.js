@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import ms from 'ms'
 import User from '../Models/UserModel.js'
+import Profile from '../Models/ProfileModel.js'
 import RefreshToken from '../Models/RefreshTokenModel.js'
 import { generateOTP } from '../Utilities/auth/otpGenerator.js'
 import { sendOTP } from '../Utilities/auth/otpSender.js'
@@ -64,8 +65,12 @@ export const verifyOTPController = async (req, res) => {
         });
 
         await newUser.save()
-            delete req.session.userData;
-            res.status(200).json({message: 'Registration successfull'});
+        const profile = new Profile({
+            userId : newUser._id
+        })
+        await profile.save()
+        delete req.session.userData;
+        res.status(200).json({message: 'Registration successfull'});
        
     } catch (error) {
         console.error('Error saving user to database:', error);
@@ -91,12 +96,12 @@ export const loginController = async (req, res) => {
         }
 
 
-        const accessToken = jwt.sign({ userName: user.userName }, process.env.JWT_SECRET, {
+        const accessToken = jwt.sign({ userId: user._id, userName: user.userName }, process.env.JWT_SECRET, {
             expiresIn: process.env.JWT_EXPIRES_IN
         });
 
 
-        const refreshToken = jwt.sign({ userName: user.userName }, process.env.JWT_REFRESH_SECRET, {
+        const refreshToken = jwt.sign({ userId: user._id, userName: user.userName }, process.env.JWT_REFRESH_SECRET, {
             expiresIn: process.env.JWT_REFRESH_EXPIRES_IN
         });
         const existingToken = await RefreshToken.findOne({ userId: user._id });
